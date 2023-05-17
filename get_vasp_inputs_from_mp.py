@@ -44,6 +44,7 @@ def generate_vasp_inputs(structure, directory, task_ids, icsd_ids, energy_above_
             "ISYM": 0,
             "NPAR": 8,
             "SIGMA": 0.03,
+            "SYMPREC": 1.0e-8,
         },
         user_potcar_functional="PBE_54",
     )
