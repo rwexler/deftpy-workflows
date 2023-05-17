@@ -42,6 +42,7 @@ def generate_vasp_inputs(structure, directory, task_ids, icsd_ids, energy_above_
         user_incar_settings={
             "ISMEAR": 0,
             "ISYM": 0,
+            "NPAR": 8,
             "SIGMA": 0.03,
         },
         user_potcar_functional="PBE_54",
