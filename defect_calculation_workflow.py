@@ -23,9 +23,8 @@ executor = ct.executor.SlurmExecutor(
     options={
         "job-name": "covalent",
         "nodes": 1,
-        "ntasks": 8,
-        "mem-per-cpu": "4G",
-        "time": "00:10:00",
+        "ntasks": 64,
+        "mem-per-cpu": "3G",
         "ntasks-per-core": 1,
         "hint": "nomultithread",
     },
@@ -88,7 +87,7 @@ def get_defect_entry_from_defect(
 
 
 @ct.electron
-def generate_defect_entries(relaxed_system, symbol="O", charge=0, sc_mat=((2, 0, 0), (0, 2, 0), (0, 0, 2))):
+def generate_defect_entries(relaxed_system, symbol="O", charge=0, min_length=9):
     relaxed_system_structure = AseAtomsAdaptor.get_structure(relaxed_system)
     defect_generator = VacancyGenerator()
 
@@ -101,13 +100,13 @@ def generate_defect_entries(relaxed_system, symbol="O", charge=0, sc_mat=((2, 0,
     for defect in defects:
         defect.user_charges = [charge]
         defect_supercell = defect.get_supercell_structure(
-            sc_mat=sc_mat,
-            dummy_species=DummySpecies("X")
+            min_length=min_length,
+            dummy_species=DummySpecies("X"),
         )
         defect_entry = get_defect_entry_from_defect(
             defect=defect,
             charge_state=charge,
-            defect_supercell=defect_supercell
+            defect_supercell=defect_supercell,
         )
         defect_entries.append(defect_entry)
     return defect_entries
@@ -153,7 +152,7 @@ def run_defect_calculations(system, calculator):
 
 
 def main():
-    directories = sorted(glob("*_mp-*"))
+    directories = sorted(glob("your vasp input directories"))
     for directory in directories:
         s = read(os.path.join(directory, "POSCAR"))
         s.set_initial_magnetic_moments([0.6] * len(s))
@@ -164,7 +163,6 @@ def main():
             pp="PBE",
         )
         c.read_incar(os.path.join(directory, "INCAR"))
-        c.read_kpoints(os.path.join(directory, "KPOINTS"))
         dispatch_id = ct.dispatch(run_defect_calculations)(s, c)
         result = ct.get_result(dispatch_id=dispatch_id, wait=True)
         print(f"{directory} calculation status = {result.status}")
