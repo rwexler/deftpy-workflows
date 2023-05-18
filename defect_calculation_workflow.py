@@ -130,7 +130,6 @@ def distort_defects(defect_entries):
 
 
 @ct.electron(executor=executor)
-@ct.lattice
 def relax_defects(distorted_defects, calculator, isif=2):
     relaxed_defects = []
     for defect_distortion_id, distorted_defect in distorted_defects.items():
