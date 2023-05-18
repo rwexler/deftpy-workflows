@@ -41,7 +41,9 @@ def generate_vasp_inputs(structure, directory, task_ids, icsd_ids, energy_above_
         structure,
         user_incar_settings={
             "ISMEAR": 0,
+            "ISPIN": None,
             "ISYM": 0,
+            "MAGMOM": None,
             "NPAR": 8,
             "SIGMA": 0.03,
             "SYMPREC": 1.0e-8,
