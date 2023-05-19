@@ -48,8 +48,8 @@ def generate_vasp_inputs(structure, directory, task_ids, icsd_ids, energy_above_
             "ISPIN": None,
             "ISYM": 0,
             "MAGMOM": None,
-            "NPAR": 8,
-            "SIGMA": 0.03,
+            "NCORE": 8,
+            "SIGMA": 0.01,
             "SYMPREC": 1.0e-8,
         },
         user_potcar_functional="PBE_54",
@@ -75,9 +75,9 @@ def generate_vasp_inputs(structure, directory, task_ids, icsd_ids, energy_above_
 
 def main():
     api_key = os.getenv("MATERIALS_PROJECT_API_KEY")
-    metals = pnictogen_metals
+    metals = alkali_metals
     nonmetal_species = Species(symbol="O", oxidation_state=-2)
-    directory = "binary_pnictogen_metal_oxides"
+    directory = "binary_alkali_metal_oxides"
     material_docs = get_material_docs(api_key, metals, nonmetal_species)
     for material_doc in material_docs:
         structure = material_doc.structure
