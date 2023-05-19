@@ -40,7 +40,7 @@ def get_material_docs(api_key, metals, nonmetal_species):
     return material_docs
 
 
-def generate_vasp_inputs(structure, directory, task_ids, icsd_ids, energy_above_hull):
+def generate_vasp_inputs(structure, directory, task_ids, icsd_ids, energy_above_hull, stdev=0.2):
     vasp_input_set = MPScanRelaxSet(
         structure,
         user_incar_settings={
@@ -59,8 +59,8 @@ def generate_vasp_inputs(structure, directory, task_ids, icsd_ids, energy_above_
     # Rattle structure
     os.rename(os.path.join(directory, "POSCAR"), os.path.join(directory, "POSCAR.higher_symmetry"))
     atoms = AseAtomsAdaptor.get_atoms(structure)
-    atoms.rattle()
-    atoms.set_cell(atoms.cell + rng.normal(scale=0.001, size=atoms.cell.shape))
+    atoms.rattle(stdev=stdev)
+    atoms.set_cell(atoms.cell + rng.normal(scale=stdev, size=atoms.cell.shape))
     write(os.path.join(directory, "POSCAR"), atoms, format="vasp")
 
     with open(os.path.join(directory, "task_ids.txt"), "w") as f:
