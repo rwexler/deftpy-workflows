@@ -10,12 +10,12 @@ from pymatgen.io.vasp.sets import MPScanRelaxSet
 
 rng = default_rng(42)
 
-alkali_metals = ['Li', 'Na', 'K', 'Rb', 'Cs']
-alkaline_earth_metals = ['Be', 'Mg', 'Ca', 'Sr', 'Ba']
-group_13_metals = ['Al', 'Ga', 'In', 'Tl']
-group_14_metals = ['Sn', 'Pb']
-pnictogen_metals = ['Bi']
-chalcogen_metals = ['Po']
+alkali_metals = ["Li", "Na", "K", "Rb", "Cs"]
+alkaline_earth_metals = ["Be", "Mg", "Ca", "Sr", "Ba"]
+group_13_metals = ["Al", "Ga", "In", "Tl"]
+group_14_metals = ["Sn", "Pb"]
+pnictogen_metals = ["Bi"]
+chalcogen_metals = ["Po"]
 
 
 def get_material_docs(api_key, metals, nonmetal_species):
