@@ -4,14 +4,18 @@ from ase.io import write
 from emmet.core.provenance import Database
 from mp_api.client import MPRester
 from numpy.random import default_rng
-from pymatgen.core import Element, Species
+from pymatgen.core import Species
 from pymatgen.io.ase import AseAtomsAdaptor
 from pymatgen.io.vasp.sets import MPScanRelaxSet
-from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 
 rng = default_rng(42)
 
-alkali_metals = [str(Element.from_Z(i)) for i in range(1, 119) if Element.from_Z(i).is_alkali]
+alkali_metals = ['Li', 'Na', 'K', 'Rb', 'Cs']
+alkaline_earth_metals = ['Be', 'Mg', 'Ca', 'Sr', 'Ba']
+group_13_metals = ['Al', 'Ga', 'In', 'Tl']
+group_14_metals = ['Sn', 'Pb']
+pnictogen_metals = ['Bi']
+chalcogen_metals = ['Po']
 
 
 def get_material_docs(api_key, metals, nonmetal_species):
@@ -71,13 +75,12 @@ def generate_vasp_inputs(structure, directory, task_ids, icsd_ids, energy_above_
 
 def main():
     api_key = os.getenv("MATERIALS_PROJECT_API_KEY")
-    metals = alkali_metals
+    metals = pnictogen_metals
     nonmetal_species = Species(symbol="O", oxidation_state=-2)
-    directory = "binary_alkali_metal_oxides"
+    directory = "binary_pnictogen_metal_oxides"
     material_docs = get_material_docs(api_key, metals, nonmetal_species)
     for material_doc in material_docs:
         structure = material_doc.structure
-        conventional_standard_structure = SpacegroupAnalyzer(structure).get_conventional_standard_structure()
 
         formula_pretty = material_doc.formula_pretty
         symmetry_symbol = material_doc.symmetry.symbol.replace("/", "__")
@@ -89,7 +92,7 @@ def main():
 
         vasp_input_directory = os.path.join(directory, material)
         generate_vasp_inputs(
-            conventional_standard_structure,
+            structure,
             vasp_input_directory,
             task_ids,
             icsd_ids,
