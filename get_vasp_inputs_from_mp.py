@@ -17,6 +17,20 @@ group_14_metals = ["Sn", "Pb"]
 pnictogen_metals = ["Bi"]
 chalcogen_metals = ["Po"]
 
+RUNSCRIPT = """#!/bin/bash
+#SBATCH --job-name={job_name}
+#SBATCH --output=log
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=64
+#SBATCH --mem-per-cpu=3G
+#SBATCH --partition=dragon
+#SBATCH --exclusive
+
+ulimit -s unlimited
+
+srun -n 64 /software/vasp.6.4.1/bin/vasp_std
+"""
+
 
 def get_material_docs(api_key, metals, nonmetal_species):
     with MPRester(api_key) as mpr:
@@ -45,11 +59,13 @@ def generate_vasp_inputs(structure, directory, task_ids, icsd_ids, energy_above_
         structure,
         user_incar_settings={
             "ISMEAR": 0,
-            "ISPIN": None,
-            "ISYM": 0,
-            "MAGMOM": None,
-            "NCORE": 8,
             "SIGMA": 0.01,
+            "ISYM": 0,
+            "NELMIN": 6,
+            "LPLANE": True,
+            "NCORE": 8,
+            "LSCALU": False,
+            "NSIM": 4,
             "SYMPREC": 1.0e-8,
         },
         user_potcar_functional="PBE_54",
@@ -71,6 +87,10 @@ def generate_vasp_inputs(structure, directory, task_ids, icsd_ids, energy_above_
 
     with open(os.path.join(directory, "energy_above_hull.txt"), "w") as f:
         f.write(f"{energy_above_hull}\n")
+
+    # Write runscript
+    with open(os.path.join(directory, "runscript"), "w") as f:
+        f.write(RUNSCRIPT.format(job_name=directory.split("/")[-1]))
 
 
 def main():
