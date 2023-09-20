@@ -45,7 +45,7 @@ def get_high_spin_magmom(structure):
 
 def main():
     # Make vacancies from bulk Fm-3m Li2O
-    contcar_path = "binary_alkali_metal_oxides/Li2O_Fm-3m/rerun/CONTCAR"
+    contcar_path = "output/binary_alkali_metal_oxides/Li2O_Fm-3m/rerun/CONTCAR"
     atoms = AseAtomsAdaptor.get_atoms(Structure.from_file(contcar_path))
     vacancies = make_defects_from_bulk(
         atoms=atoms,
@@ -55,16 +55,17 @@ def main():
     )
 
     # Read INCAR
-    incar_path = "binary_alkali_metal_oxides/Li2O_Fm-3m/rerun/INCAR"
+    incar_path = "output/binary_alkali_metal_oxides/Li2O_Fm-3m/rerun/INCAR"
     incar = Incar.from_file(incar_path)
-    # del incar_dict["MAGMOM"]
+    incar["ISIF"] = 2
 
     # Write input files
     for i in range(len(vacancies)):
         vacancy_stats = vacancies[i].info["defect_stats"]
 
         # Make directory
-        directory = f"binary_alkali_metal_oxides" \
+        directory = f"output" \
+                    f"/binary_alkali_metal_oxides" \
                     f"/Li2O_Fm-3m" \
                     f"/rerun" \
                     f"/vacancies" \
