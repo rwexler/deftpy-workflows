@@ -1,5 +1,4 @@
 """ Defect calculation workflow """
-import sys
 import os
 
 from pymatgen.analysis.defects.generators import VacancyGenerator
@@ -8,7 +7,6 @@ from pymatgen.core.structure import Structure
 from pymatgen.io.ase import AseAtomsAdaptor
 from pymatgen.io.vasp import Incar, Kpoints
 from pymatgen.io.vasp.sets import MPScanRelaxSet
-
 from quacc.utils.defects import make_defects_from_bulk
 
 RUNSCRIPT = """#!/bin/bash
@@ -43,10 +41,15 @@ def get_high_spin_magmom(structure):
     return high_spin_magmom
 
 
-def main():
-    # Make vacancies from bulk Fm-3m Li2O
-    contcar_path = "output/binary_alkali_metal_oxides/Li2O_Fm-3m/rerun/CONTCAR"
-    atoms = AseAtomsAdaptor.get_atoms(Structure.from_file(contcar_path))
+def main(path):
+    # Make vacancies from bulk
+    contcar_path = path + "/CONTCAR"
+
+    # Make supercell
+    structure = Structure.from_file(contcar_path)
+    structure.make_supercell([2, 2, 2])
+
+    atoms = AseAtomsAdaptor.get_atoms(structure)
     vacancies = make_defects_from_bulk(
         atoms=atoms,
         defect_gen=VacancyGenerator,
@@ -55,7 +58,7 @@ def main():
     )
 
     # Read INCAR
-    incar_path = "output/binary_alkali_metal_oxides/Li2O_Fm-3m/rerun/INCAR"
+    incar_path = path + "/INCAR"
     incar = Incar.from_file(incar_path)
     incar["ISIF"] = 2
 
@@ -64,13 +67,9 @@ def main():
         vacancy_stats = vacancies[i].info["defect_stats"]
 
         # Make directory
-        directory = f"output" \
-                    f"/binary_alkali_metal_oxides" \
-                    f"/Li2O_Fm-3m" \
-                    f"/rerun" \
-                    f"/vacancies" \
-                    f"/{vacancy_stats['defect_symbol']}_{vacancy_stats['defect_charge']}" \
-                    f"/{vacancy_stats['distortions']}"
+        directory = path + f"/vacancies" \
+                           f"/{vacancy_stats['defect_symbol']}_{vacancy_stats['defect_charge']}" \
+                           f"/{vacancy_stats['distortions']}"
         if not os.path.exists(directory):
             os.makedirs(directory)
 
@@ -91,7 +90,7 @@ def main():
         MPScanRelaxSet(vacancy, user_potcar_functional="PBE_54").potcar.write_file(f"{directory}/POTCAR")
 
         # Write runscript
-        job_name = f"Li2O_Fm-3m" \
+        job_name = f"{path.split('/')[-3]}" \
                    f"--{vacancy_stats['defect_symbol']}" \
                    f"--{vacancy_stats['defect_charge']}" \
                    f"--{vacancy_stats['distortions']}"
@@ -100,4 +99,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    main("output/binary_alkali_metal_oxides/Na2O_Fm-3m/rerun")
