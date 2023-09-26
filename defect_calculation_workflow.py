@@ -1,5 +1,6 @@
 """ Defect calculation workflow """
 import os
+import sys
 
 from pymatgen.analysis.defects.generators import VacancyGenerator
 from pymatgen.core import Element
@@ -47,7 +48,7 @@ def main(path):
 
     # Make supercell
     structure = Structure.from_file(contcar_path)
-    structure.make_supercell([2, 2, 2])
+    # structure.make_supercell([2, 2, 2])
 
     atoms = AseAtomsAdaptor.get_atoms(structure)
     vacancies = make_defects_from_bulk(
@@ -90,7 +91,7 @@ def main(path):
         MPScanRelaxSet(vacancy, user_potcar_functional="PBE_54").potcar.write_file(f"{directory}/POTCAR")
 
         # Write runscript
-        job_name = f"{path.split('/')[-3]}" \
+        job_name = f"{path.split('/')[-2]}" \
                    f"--{vacancy_stats['defect_symbol']}" \
                    f"--{vacancy_stats['defect_charge']}" \
                    f"--{vacancy_stats['distortions']}"
@@ -99,4 +100,4 @@ def main(path):
 
 
 if __name__ == "__main__":
-    main("output/binary_alkali_metal_oxides/Na2O_Fm-3m/rerun")
+    main("output/binary_alkali_metal_oxides/Rb2O_Fm-3m/rerun")
