@@ -22,14 +22,14 @@ RUNSCRIPT = """#!/bin/bash
 #SBATCH --job-name={job_name}
 #SBATCH --output=log
 #SBATCH --nodes=1
-#SBATCH --ntasks-per-node=64
+#SBATCH --ntasks-per-node=32
 #SBATCH --mem-per-cpu=3G
-#SBATCH --partition=dragon
+#SBATCH --partition=bear
 #SBATCH --exclusive
 
 ulimit -s unlimited
 
-srun -n 64 /software/vasp.6.4.1/bin/vasp_std
+srun -n 32 /software/vasp.6.4.1/bin/vasp_std
 """
 
 
@@ -99,7 +99,7 @@ def get_minimum_bond_distance(structure):
     return minimum_bond_distance
 
 
-def generate_vasp_inputs(structure, directory, task_ids, icsd_ids, energy_above_hull, band_gap, percent=0.1, rattle_structure=True):
+def generate_vasp_inputs(structure, directory, task_ids, icsd_ids, energy_above_hull, band_gap, percent=0.1):
     magmom = get_high_spin_magmom(structure)
     structure.add_site_property("magmom", magmom)
     lmaxmix = get_lmaxmix(structure)
@@ -144,37 +144,31 @@ def generate_vasp_inputs(structure, directory, task_ids, icsd_ids, energy_above_
     vasp_input_set.write_input(directory, include_cif=True)
 
     # Rattle structure
-    if rattle_structure:
-        os.rename(os.path.join(directory, "POSCAR"), os.path.join(directory, "POSCAR.higher_symmetry"))
-        atoms = AseAtomsAdaptor.get_atoms(structure)
-        minimum_bond_distance = get_minimum_bond_distance(structure)
-        stdev = percent * minimum_bond_distance
-        atoms.rattle(stdev=stdev)
-        atoms.set_cell(atoms.cell + rng.normal(scale=stdev, size=atoms.cell.shape))
-        write(os.path.join(directory, "POSCAR"), atoms, format="vasp")
+    os.rename(os.path.join(directory, "POSCAR"), os.path.join(directory, "POSCAR.higher_symmetry"))
+    atoms = AseAtomsAdaptor.get_atoms(structure)
+    minimum_bond_distance = get_minimum_bond_distance(structure)
+    stdev = percent * minimum_bond_distance
+    atoms.rattle(stdev=stdev)
+    atoms.set_cell(atoms.cell + rng.normal(scale=stdev, size=atoms.cell.shape))
+    write(os.path.join(directory, "POSCAR"), atoms, format="vasp")
 
     # Write metadata
-    if task_ids:
-        with open(os.path.join(directory, "task_ids.txt"), "w") as f:
-            f.write("\n".join(str(task_id) for task_id in task_ids) + "\n")
+    with open(os.path.join(directory, "task_ids.txt"), "w") as f:
+        f.write("\n".join(str(task_id) for task_id in task_ids) + "\n")
 
-    if icsd_ids:
-        with open(os.path.join(directory, "icsd_ids.txt"), "w") as f:
-            f.write("\n".join(str(icsd_id) for icsd_id in icsd_ids) + "\n")
+    with open(os.path.join(directory, "icsd_ids.txt"), "w") as f:
+        f.write("\n".join(str(icsd_id) for icsd_id in icsd_ids) + "\n")
 
-    if energy_above_hull:
-        with open(os.path.join(directory, "energy_above_hull.txt"), "w") as f:
-            f.write(f"{energy_above_hull}\n")
+    with open(os.path.join(directory, "energy_above_hull.txt"), "w") as f:
+        f.write(f"{energy_above_hull}\n")
 
-    if band_gap:
-        with open(os.path.join(directory, "band_gap.txt"), "w") as f:
-            f.write(f"{band_gap}\n")
+    with open(os.path.join(directory, "band_gap.txt"), "w") as f:
+        f.write(f"{band_gap}\n")
 
-    if rattle_structure:
-        with open(os.path.join(directory, "rattle.txt"), "w") as f:
-            f.write(f"percent {percent}\n")
-            f.write(f"minimum_bond_distance {minimum_bond_distance}\n")
-            f.write(f"stdev {stdev}\n")
+    with open(os.path.join(directory, "rattle.txt"), "w") as f:
+        f.write(f"percent {percent}\n")
+        f.write(f"minimum_bond_distance {minimum_bond_distance}\n")
+        f.write(f"stdev {stdev}\n")
 
     # Write runscript
     with open(os.path.join(directory, "runscript"), "w") as f:
@@ -183,9 +177,9 @@ def generate_vasp_inputs(structure, directory, task_ids, icsd_ids, energy_above_
 
 def main():
     api_key = os.getenv("MATERIALS_PROJECT_API_KEY")
-    metals = alkali_metals
+    metals = alkaline_earth_metals
     nonmetal_species = Species(symbol="O", oxidation_state=-2)
-    directory = "binary_alkali_metal_oxides"
+    directory = "binary_alkaline_earth_metal_oxides"
     material_docs = get_material_docs(api_key, metals, nonmetal_species)
     for material_doc in material_docs:
         structure = material_doc.structure
